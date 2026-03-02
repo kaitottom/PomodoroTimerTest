@@ -2,14 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pomo_timer/models/score.dart';
+import 'package:pomo_timer/pages/draftevalation_page.dart';
+import 'package:pomo_timer/pages/app_settings_page.dart';
 
 import 'package:pomo_timer/pages/pages.dart';
+import 'package:pomo_timer/widgets/concentration_bottomsheet.dart';
 
-void main() {
+import 'data/database/daos/score_dao.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 画面回転を縦固定
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   final app = MyMainPage();
   final scope = ProviderScope(child: app);
   runApp(scope);
 }
+
 
 class MyMainPage extends ConsumerWidget {
   //StatelessWidget
@@ -23,6 +37,7 @@ class MyMainPage extends ConsumerWidget {
         ShellRoute(
           builder: (context, state, child) {
             final location = state.uri.toString();
+            final isSettingsPage = location.startsWith('/settings');
             int currentIndex = 0;
             if (location.startsWith('/Timersettings') || location.startsWith('/Timer')) {
               currentIndex = 1;
@@ -38,11 +53,45 @@ class MyMainPage extends ConsumerWidget {
                 SystemNavigator.pop(); // ← アプリ終了
               },
             child: Scaffold(
-              appBar: AppBar(
+
+              /*appBar: AppBar(
                 title: const Text('ポモドーロタイマー'),
                 backgroundColor: Colors.orange.shade100,
                 foregroundColor: Colors.orange.shade800,
+                // ポモドーロタイマーページの場合のみ設定ボタンを表示
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () => context.go('/settings'),
+                    tooltip: '設定',
+                  ),
+                ],
               ),
+
+               */
+              appBar: isSettingsPage
+                  ? AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                ),
+                title: const Text('設定画面'),
+                backgroundColor: Colors.lightBlue.shade200,
+                foregroundColor: Colors.blue.shade900,
+              )
+                  : AppBar(
+                title: const Text('ポモドーロタイマー'),
+                backgroundColor: Colors.white,
+                foregroundColor: Color(0xFFE8C957),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () => context.push('/settings'),
+                    tooltip: '設定',
+                  ),
+                ],
+              ),
+
               body: child,
               bottomNavigationBar: BottomNavigationBar(
                 currentIndex: currentIndex,
@@ -62,16 +111,37 @@ class MyMainPage extends ConsumerWidget {
                       break;
                   }
                 },
-                items: const [
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
+                items: [
+                  BottomNavigationBarItem(
+                      icon:Image.asset(
+                        'assets/images/home_iconbase.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                      label: 'ホーム'),
 
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.timer_outlined),
+                    icon: Image.asset(
+                      'assets/images/pomodoro_tomato.png',
+                      width: 24,
+                      height: 24,
+                    ),
+
                     label: '設定',
                   ),
-                  BottomNavigationBarItem(icon: Icon(Icons.flag), label: '目標'),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.analytics),
+                      icon: Image.asset(
+                        'assets/images/goal_icon.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                      label: '目標'),
+                  BottomNavigationBarItem(
+                    icon: Image.asset(
+                      'assets/images/stats_icon.png',
+                      width: 24,
+                      height: 24,
+                    ),
                     label: '記録',
                   ),
                 ],
@@ -107,10 +177,10 @@ class MyMainPage extends ConsumerWidget {
                     //return GoalNewPage(fromReview: fromReview);
                   //},
                 ),
-                GoRoute(
+                /*GoRoute(
                   path: 'tasks', //目標へのタスクを入力や設定
                   builder: (context, state) => const GoalTasksPage(),
-                ),
+                ), */
                 GoRoute(
                   path: 'review', //目標とタスクを全体的に確認
                   builder: (context, state) => const GoalReviewPage(),
@@ -119,8 +189,21 @@ class MyMainPage extends ConsumerWidget {
                   path: 'edit', //既存の目標やタスクを変更、再設定
                   builder: (context, state) {
                     final from = state.uri.queryParameters['from']; // "review" が入る
-                    return GoalEditPage(from: from);
+
+                    return GoalEditPage(goalId: null, from: from);
                   },
+                  routes: [
+                    GoRoute(
+                      path: ':goalId', //既存の目標やタスクを変更、再設定
+                      builder: (context, state) {
+                        final from = state.uri.queryParameters['from']; // "review" が入る
+
+                        final idString = state.pathParameters['goalId'];
+                        final goalId = int.tryParse(idString ?? '');
+                        return GoalEditPage(goalId: goalId, from: from ?? 'main');
+                      },
+                    ),
+                  ],
                   //builder: (context, state) => const GoalEditPage(),
                 ),
               ],
@@ -128,14 +211,38 @@ class MyMainPage extends ConsumerWidget {
             GoRoute(
               path: '/stats',
               builder: (context, state) => const StatsPage(),
-            ),
-            GoRoute(
-              path: '/score',
-              builder: (context, state) => const ScorePage(),
+              routes: [
+                GoRoute(
+                  path: 'draftevaluation',
+                  builder: (context, state) {
+                    // 1. Mapとして受け取る
+                    final args = state.extra as Map<String, dynamic>;
+
+                    // 2. キーを指定して取り出す
+                    final draft = args['draft'] as ScoreWithDetails;
+                    //final concentration = args['concentration'] as int;
+                    final reflectionData = args['reflectionData'] as ReflectionData;
+
+                    return DraftEvaluationPage(
+                      draft: draft,
+                      //concentration: concentration,
+                      reflectionData: reflectionData,
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: '/evaluation',
-              builder: (context, state) => const EvaluationPage(),
+              builder: (context, state) { //=> const EvaluationPage(),
+              final data = state.extra as SessionData;
+
+              return EvaluationPage(sessionData: data);
+                },
+            ),
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const AppSettingsPage(),
             ),
           ],
         ),

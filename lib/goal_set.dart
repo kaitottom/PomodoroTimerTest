@@ -128,7 +128,7 @@ class _GoalSettingsPageState extends State<GoalSettingsPage> {
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [const Text('影響度：'), Text('$_impact')],
+                            children: [const Text('重要度：'), Text('$_impact')],
                           ),
                           Slider(
                             value: _impact.toDouble(),

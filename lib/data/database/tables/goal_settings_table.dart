@@ -29,10 +29,11 @@ class GoalSettingsTable extends Table {
   DateTimeColumn get limit => dateTime()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().nullable()();
-  TextColumn get aiGeneratedTasks => text().nullable()();
+  TextColumn get aiGeneratedTasks => text().nullable()();//
   DateTimeColumn get completedAt => dateTime().nullable()();
 
 
   //@override
   //Set<Column> get primaryKey => {id};
+
 }

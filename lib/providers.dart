@@ -4,6 +4,9 @@ export 'providers/timer_provider.dart';
 export 'providers/goal_settings_provider.dart';
 export 'providers/task_provider.dart';
 export 'providers/score_provider.dart';
+export 'providers/app_settings_provider.dart';
+export 'providers/notification_provider.dart';
+export 'providers/database_provider.dart';
 
 // 既存のプロバイダー（後で削除予定）
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/goal_settings_provider.dart';
 //import '../models/goal_settings.dart';
+import '../widgets/confirm_back_wrapper.dart';
 import 'task_card.dart';
 import 'task_form_modal.dart';
 
@@ -12,6 +14,7 @@ class GoalTasksBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final wrapperKey = GlobalKey<ConfirmBackWrapperState>();
     final currentGoal = ref.watch(tempGoalProvider);
     const maxTasks = 5;
 
@@ -20,7 +23,15 @@ class GoalTasksBottomSheet extends ConsumerWidget {
     }
 
     return SafeArea(
-      child: FractionallySizedBox(
+      child: ConfirmBackWrapper(
+        key: wrapperKey,
+        //firmPop: () => context.go('/goal'),
+        onConfirmPop: ()  {
+          ref.read(tempGoalProvider.notifier).reset();
+          context.go('/goal');
+        },
+        message: 'タスク編集内容が失われます。戻ってよろしいですか？',
+        child: FractionallySizedBox(
         heightFactor: 0.90, // 高さを画面の90%に調整
         child: Column(
           children: [
@@ -52,7 +63,7 @@ class GoalTasksBottomSheet extends ConsumerWidget {
                   return TaskCard(
                     task: task,
                     onDelete: () =>
-                        ref.read(tempGoalProvider.notifier).deleteTask(task.task),
+                        ref.read(tempGoalProvider.notifier).deleteTask(task.id),
                     onEdit: () => showDialog(
                       context: context,
                       builder: (_) => TaskFormModal(
@@ -72,40 +83,82 @@ class GoalTasksBottomSheet extends ConsumerWidget {
 
             // タスク追加 or 最大表示
             if (currentGoal.tasks.length < maxTasks)
-              ElevatedButton.icon(
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (_) => TaskFormModal(
-                    currentTaskCount: currentGoal.tasks.length,
-                    maxTasks: maxTasks,
-                    onSave: (task) =>
-                        ref.read(tempGoalProvider.notifier).addTask(task),
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => showDialog(
+                        context: context,
+                        builder: (_) => TaskFormModal(
+                          currentTaskCount: currentGoal.tasks.length,
+                          maxTasks: maxTasks,
+                          onSave: (task) =>
+                              ref.read(tempGoalProvider.notifier).addTask(task),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add),
+                      label: const Text("タスクを追加"),
+                    ),
+                    const SizedBox(width: 16), // ボタンと数字の間隔
+
+                    // ★追加: 現在の件数 / 最大数 を表示
+                    Text(
+                      "${currentGoal.tasks.length} / $maxTasks",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
-                icon: const Icon(Icons.add),
-                label: const Text("タスクを追加"),
               ),
-            if (currentGoal.tasks.length >= maxTasks)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
-                ),
-                child: const Text(
-                  'タスクは最大5個までです',
-                  style: TextStyle(color: Colors.orange),
+
+            // タスク追加 or 最大表示
+            if  (currentGoal.tasks.length >= maxTasks)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: const Text(
+                        'タスクは最大5個までです',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                    const SizedBox(width: 20), // ボタンと数字の間隔
+
+                    // ★追加: 現在の件数 / 最大数 を表示
+                    Text(
+                      "${currentGoal.tasks.length} / $maxTasks",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
             const SizedBox(height: 12),
 
+
             // 完了ボタン
             ElevatedButton(
               onPressed: () async {
                 // BottomSheet を閉じるのを待つ
+                wrapperKey.currentState?.allowNextPop(); // ✅ ここが重要
                  await Navigator.of(context).maybePop(); // その後に遷移
 
                  onComplete(); // ここで GoRouter.of(context).go('/goal/review');
@@ -125,6 +178,7 @@ class GoalTasksBottomSheet extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

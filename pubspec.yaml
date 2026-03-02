@@ -31,21 +31,42 @@ dependencies:
   percent_indicator: ^4.2.2
   flutter_riverpod: ^2.5.1
   go_router: ^13.0.0
+  # ▼▼▼ ここから追加 ▼▼▼
+  drift: ^2.17.0
+  sqlite3_flutter_libs: ^0.5.21
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  intl: ^0.19.0
+  fl_chart: ^0.69.0
+    # ▲▲▲ ここまで追加 ▲▲▲
   riverpod_annotation: ^2.5.1
   #assets_audio_player: ^3.0.0
   audioplayers: ^6.5.0
+  video_player: ^2.8.2
+  wakelock_plus: ^1.4.0
   flutter:
     sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  flutter_local_notifications: ^19.5.0
+  screen_state: ^4.1.1
+  confetti: ^0.7.0
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   riverpod_generator: ^2.5.1
   build_runner: ^2.5.4
   flutter_test:
     sdk: flutter
+
+  # ▼▼▼ ここから追加 ▼▼▼
+  drift_dev: ^2.17.0
+  #build_runner: ^2.4.9
+  # ▲▲▲ ここまで追加 ▲▲▲
+  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -57,15 +78,32 @@ dev_dependencies:
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/pomodoro_brain.png"
+
 # The following section is specific to Flutter packages.
 flutter:
   assets:
     - assets/sounds/beep.mp3
+    - assets/videos/break_in_forests.mp4
+    - assets/videos/break_sea.mp4
+    - assets/videos/break_onsen.mp4
+    - assets/images/pomodoro_tomato.png
+    - assets/images/goal_icon.png
+    - assets/images/stats_icon.png
+    - assets/images/home_iconbase.png
 
-  # The following line ensures that the Material Icons font is
+      # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  #fonts:
+  #  - family: MaterialIcons
+  #    fonts:
+  #      - asset: assets/fonts/MaterialIcons-Regular.otf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
