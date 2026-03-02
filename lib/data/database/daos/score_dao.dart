@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart'; // debugPrint用
 import 'package:pomo_timer/models/score.dart';
 import 'package:pomo_timer/models/task_score_data.dart';
 import '../app_database.dart'; // データベース本体
