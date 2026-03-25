@@ -135,7 +135,7 @@ final canUseAiProvider = Provider<bool>((ref) {
 
   final now = DateTime.now();
   // 月または年が異なれば利用可能（月1回制限）
-  return now.month > lastUsage.month;
+  return now.month != lastUsage.month || now.year != lastUsage.year;
 });
 
 //----------------------------------------------------------------------------

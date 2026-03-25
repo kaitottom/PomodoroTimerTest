@@ -6,8 +6,10 @@ import '../providers.dart';
 //import '../providers/timer_provider.dart';
 //import '../providers/goal_settings_provider.dart';
 import '../models/pomodoro_settings.dart';
+import '../theme/app_colors.dart';
 import '../widgets/main_button.dart';
 import '../pages/goal/goal_main_page.dart';
+import 'package:pomo_timer/theme/app_theme.dart';
 
 
 class MainPage extends ConsumerWidget {
@@ -33,18 +35,18 @@ class MainPage extends ConsumerWidget {
                         height: 80,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'ポモドーロタイマー',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE8C957),
+                          color: ParadiseColors.primaryTeal,
                         ),
                       ),
                       const SizedBox(height: 10),
                       const Text(
                         '集中力を高めて、効率的に作業しましょう',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(fontSize: 16, color: ParadiseColors.deepText),
                         textAlign: TextAlign.center,
 
                       ),
@@ -56,91 +58,103 @@ class MainPage extends ConsumerWidget {
                           //final currentGoal = ref.watch(currentGoalProvider);
                           //return Container(
                           return currentGoalAsync.when(
-                              data: (currentgoal) => // 1. Stackを一番外側に持ってくる
+                              data: (currentgoal) =>
+                              // Consumer内のcurrentGoalAsync.when(data: (currentgoal) => ... ) の中身を書き換えます
                               Stack(
-                                clipBehavior: Clip.none, // これによりピンを枠の真上や少し外に配置できる
+                                clipBehavior: Clip.none,
                                 children: [
-                                  // 2. メインのコンテンツ（枠線を持つカード）
-                              Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            // --- 1. 土台：木製のボード (Wooden Board) ---
-
-                            child: Stack(
-                              children: [
-                                // --- 2. 四辺の木枠 (Wooden Frames) ---
-                                Positioned(top: 0, left: 0, right: 0, height: 10, child: buildWoodFrame()), // 上枠
-                                Positioned(bottom: 0, left: 0, right: 0, height: 10, child: buildWoodFrame()), // 下枠
-                                Positioned(top: 0, bottom: 0, left: 0, width: 10, child: buildWoodFrame()), // 左枠
-                                Positioned(top: 0, bottom: 0, right: 0, width: 10, child: buildWoodFrame()), // 右枠
-
-                                // --- 3. メイン：羊皮紙 (Parchment) ---
-                                Padding(
-                                  padding: const EdgeInsets.all(8), // 木枠の内側に配置
-                                  child: Container(
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                    // --- 外側の「宝石の額縁」部分 ---
                                     decoration: BoxDecoration(
-                                      gradient: RadialGradient(
-                                        colors: [
-                                          const Color(0xFFF7F0D5), // 中心：明るいベージュ
-                                          const Color(0xFFE6D5B8), // 外側：少し濃いベージュ
-                                        ],
-                                        center: Alignment.center,
-                                        radius: 1.2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(2),
+                                      // 画像の塔のようなエメラルドグリーン（ティール）
+                                      color: ParadiseColors.primaryTeal,
+                                      borderRadius: BorderRadius.circular(15),
+                                      // 高級感を出すための深い影
                                       boxShadow: [
-                                        BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(2,2),),
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
                                       ],
+                                      // 微かな光沢を出すグラデーション
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          ParadiseColors.cloudGrey,
+                                          ParadiseColors.groundBlue,
+                                          ParadiseColors.skyDeepBlue,
+                                        ],
+                                      ),
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.flag, color: Colors.white70),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '現在の目標',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.black87,
-                                                    fontFamily: 'Serif',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  currentgoal?.goal.goal ?? 'なし',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.black38,
-                                                    fontFamily: 'Serif',
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                      // 額縁の厚み（木枠の代わり）
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: Container(
+                                        // --- 内側の「大理石・空」のボード部分 ---
+                                        decoration: BoxDecoration(
+                                          color: ParadiseColors.groundWhite, // 画像の空の色（アリスブルー）
+                                          borderRadius: BorderRadius.circular(11),
+                                          // 内側に沈み込んでいるような立体感を出すための内影（風）
+                                          border: Border.all(
+                                            color: ParadiseColors.crystalRock.withValues(alpha: 0.3),
+                                            width: 1,
                                           ),
-                                        ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                                          child: Row(
+                                            children: [
+                                              // アイコンもゴールドで統一
+                                              const Icon(
+                                                Icons.stars_rounded, // 旗よりも「特別な場所」感のあるアイコン
+                                                color: ParadiseColors.accentGold,
+                                                size: 28,
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      '現在の目標', // 英字にするとより高級感が出ます
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: Color(0xFF004D4D),
+                                                        letterSpacing: 2.0,
+                                                        fontFamily: 'Serif',
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      currentgoal?.goal.goal ?? '目標はセットされていません',
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: ParadiseColors.accentGold,
+                                                        fontFamily: 'Serif',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-
-                                Positioned(top: 8, left: 8, child: _buildPin()),   // 左上
-                                Positioned(top: 8, right: 8, child: _buildPin()),  // 右上
-                                Positioned(bottom: 8, left: 8, child: _buildPin()), // 左下
-                                Positioned(bottom: 8, right: 8, child: _buildPin()),// 右下
-
-                              ],
-                            ),
-                          ),
-
+                                  // --- ゴールドに修正済みのピンを配置 ---
+                                  Positioned(top: 12, left: 9, child: _buildPin()),
+                                  Positioned(top: 12, right: 9, child: _buildPin()),
+                                  Positioned(bottom: 12, left: 9, child: _buildPin()),
+                                  Positioned(bottom: 12, right: 9, child: _buildPin()),
                                 ],
                               ),
-                            loading: () => CircularProgressIndicator(),
+                            loading: () => CircularProgressIndicator(color: ParadiseColors.accentGold, backgroundColor: ParadiseColors.skyBackground,),
                             error: (_, __) => Text('目標の取得に失敗しました'),
                           );
                           },
@@ -180,7 +194,7 @@ class MainPage extends ConsumerWidget {
                         title: '目標を設定',
                         subtitle: '今日の目標を設定してモチベーション向上',
                         icon: Icons.flag,
-                        color: Colors.purple,
+                        color: Colors.orange,
                         onPressed: () => context.go('/goal'),
                       ),
                       const SizedBox(height: 40),
@@ -192,10 +206,10 @@ class MainPage extends ConsumerWidget {
                             margin: const EdgeInsets.only(top: 8),
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
+                              color: ParadiseColors.groundWhite.withValues(alpha: 1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.orange.shade200,
+                                color: ParadiseColors.primaryTeal.withValues(alpha: 0.5),
                                 width: 3.0,
                               ),
                               boxShadow: [
@@ -214,7 +228,7 @@ class MainPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                                    color: ParadiseColors.primaryTeal,
                                   ),
                                 ),
                                 SizedBox(height: 8),
@@ -222,7 +236,7 @@ class MainPage extends ConsumerWidget {
                                   '25分の集中作業と5分の休憩のように\n集中と休憩をを繰り返すことで、\n集中力と生産性を向上させる時間管理手法です。',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.black87, // 文字を少し読みやすく
+                                    color: ParadiseColors.deepText, // 文字を少し読みやすく
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -239,12 +253,12 @@ class MainPage extends ConsumerWidget {
                                 width: 16,
                                 height: 16,
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent, // ピンの色
+                                  color: ParadiseColors.accentGold, // ピンの色
                                   shape: BoxShape.circle,
                                   gradient: RadialGradient(
                                     colors: [
-                                      Colors.redAccent.shade100,
-                                      Colors.redAccent.shade700,
+                                      ParadiseColors.accentGold,
+                                      ParadiseColors.accentGold.withValues(alpha: 0.5),
                                     ],
                                     center: const Alignment(-0.3, -0.3), // 光沢の位置
                                   ),
@@ -455,7 +469,7 @@ class MainPage extends ConsumerWidget {
                                 title: '目標を設定',
                                 subtitle: '今日の目標を設定してモチベーション向上',
                                 icon: Icons.flag,
-                                color: Colors.purple,
+                                color: Colors.orange,
                                 onPressed: () => context.go('/goal'),
                               ),
                             ],
@@ -477,11 +491,19 @@ class MainPage extends ConsumerWidget {
 // ピンを表現するパーツ
   Widget _buildPin() {
     return Container(
-      width: 8,
-      height: 8,
+      width: 12,
+      height: 12,
       decoration: BoxDecoration(
-        color: Colors.redAccent, // ピンの色（画鋲っぽく赤など）
+        color: ParadiseColors.accentGold, // ピンの色（画鋲っぽく赤など）
         shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            const Color(0xFFFFF8DC), // 中心：白に近いゴールド（光沢）
+            const Color(0xFFD4AF37), // 外側：メタリックゴールド
+          ],
+          center: const Alignment(-0.3, -0.3), // 光沢の位置をずらす
+          radius: 0.8,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -489,6 +511,16 @@ class MainPage extends ConsumerWidget {
             offset: const Offset(0.5, 0.5),
           ),
         ],
+      ),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: 3,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.8),
+            shape: BoxShape.circle,
+          ),
+        ),
       ),
     );
   }

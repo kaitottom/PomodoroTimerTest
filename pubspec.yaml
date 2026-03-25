@@ -54,7 +54,10 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   screen_state: ^4.1.1
   confetti: ^0.7.0
-  google_generative_ai: ^0.4.7
+  google_generative_ai:
+  http: ^1.1.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_slidable: ^3.1.0
 
 dev_dependencies:
   riverpod_generator: ^2.5.1
@@ -66,7 +69,6 @@ dev_dependencies:
   drift_dev: ^2.17.0
   #build_runner: ^2.4.9
   # ▲▲▲ ここまで追加 ▲▲▲
-  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -89,7 +91,11 @@ flutter:
     - assets/sounds/beep.mp3
     - assets/videos/break_in_forests.mp4
     - assets/videos/break_sea.mp4
+    - assets/videos/break_undersea.mp4
     - assets/videos/break_onsen.mp4
+    - assets/videos/break_sky.mp4
+    - assets/videos/break_lavender.mp4
+    - assets/videos/break_snow.mp4
     - assets/images/pomodoro_tomato.png
     - assets/images/goal_icon.png
     - assets/images/stats_icon.png

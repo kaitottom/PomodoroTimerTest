@@ -214,6 +214,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pomo_timer/models/goal_with_tasks.dart';
+import 'package:pomo_timer/theme/app_colors.dart';
 import '../../data/database/app_database.dart';
 import '../../providers.dart';
 
@@ -520,12 +521,12 @@ class GoalMainPage extends ConsumerWidget {
                           if (currentGoal == null)
                             ElevatedButton.icon(
                               onPressed: () {
-                                ref.read(tempGoalProvider.notifier).reset();
+                                ref.read(tempGoalProvider.notifier).reset();//中断された際にはこのページ来たときにメッセージでも出す。
                                 context.go('/goal/new');
                               },
                               icon: const Icon(Icons.add),
                               label: const Text('新規目標設定'),
-                              style: _buttonStyle(Colors.green),
+                              style: _buttonStyle(ParadiseColors.skyDeepBlue),
                             ),
 
                           if (currentGoal != null)
@@ -591,7 +592,7 @@ class GoalMainPage extends ConsumerWidget {
                                       },
                                       icon: const Icon(Icons.add),
                                       label: const Text('新規目標設定'),
-                                      style: _buttonStyle(Colors.green, isDesktop: true),
+                                      style: _buttonStyle(ParadiseColors.skyDeepBlue, isDesktop: true),
                                     )
                                   else
                                     ElevatedButton.icon(

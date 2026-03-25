@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:pomo_timer/pages/timer_complete_handler.dart';
+import 'package:pomo_timer/theme/app_colors.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:video_player/video_player.dart';
@@ -19,6 +20,8 @@ import '../models/pomodoro_settings.dart';
 import '../models/timer_info.dart';
 import '../models/app_settings.dart';
 import 'package:pomo_timer/models/goal_with_tasks.dart';
+
+import '../widgets/confirm_back_wrapper.dart';
 
 class PomodoroTimerPage extends ConsumerStatefulWidget {
   const PomodoroTimerPage({super.key});
@@ -103,8 +106,16 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
         return 'assets/videos/break_in_forests.mp4';
       case BreakBackgroundType.sea:
         return 'assets/videos/break_sea.mp4';
+      case BreakBackgroundType.undersea:
+        return 'assets/videos/break_undersea.mp4';
       case BreakBackgroundType.onsen:
         return 'assets/videos/break_onsen.mp4';
+      case BreakBackgroundType.sky:
+        return 'assets/videos/break_sky.mp4';
+      case BreakBackgroundType.lavender:
+        return 'assets/videos/break_lavender.mp4';
+      case BreakBackgroundType.snow:
+        return 'assets/videos/break_snow.mp4';
     }
   }
 
@@ -306,7 +317,6 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
         return ConcentrationBottomSheet(
           onConfirm: (reflectionData) async {
             final timerInfo = ref.read(timerInfoProvider);
-            final settings = ref.read(pomodoroSettingsProvider);
             final startTime = timerInfo.startTime ?? DateTime.now();
             final endTime = DateTime.now();
 
@@ -320,11 +330,12 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
             // 秒単位で計算してから分に変換
             final int focusTotalSeconds = settings.focusTotalSeconds;
             final int breakTotalSeconds = settings.breakTotalSeconds;
-            final int focusOnlySeconds =
-                (focusTotalSeconds * currentCycle) - remainingSeconds;
-            final int totalSeconds =
-                ((focusTotalSeconds + breakTotalSeconds) * currentCycle) -
-                remainingSeconds;
+            final int focusOnlySeconds = timerInfo.type == TimerType.focus?
+            (focusTotalSeconds * currentCycle) - remainingSeconds :
+            (focusTotalSeconds * currentCycle);
+            final int totalSeconds = timerInfo.type == TimerType.focus?
+            focusTotalSeconds * currentCycle + breakTotalSeconds * (currentCycle - 1) - remainingSeconds :
+            focusTotalSeconds * currentCycle + breakTotalSeconds * currentCycle - remainingSeconds;
 
             int focusOnlyMinutes = (focusOnlySeconds / 60).floor();
             int totalMinutes = (totalSeconds / 60).floor();
@@ -372,7 +383,6 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
           },
           onLater: () async {
             final timerInfo = ref.read(timerInfoProvider);
-            final settings = ref.read(pomodoroSettingsProvider);
             final startTime = timerInfo.startTime ?? DateTime.now();
             final endTime = DateTime.now();
 
@@ -386,11 +396,12 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
             // 秒単位で計算してから分に変換
             final int focusTotalSeconds = settings.focusTotalSeconds;
             final int breakTotalSeconds = settings.breakTotalSeconds;
-            final int focusOnlySeconds =
-                (focusTotalSeconds * currentCycle) - remainingSeconds;
-            final int totalSeconds =
-                ((focusTotalSeconds + breakTotalSeconds) * currentCycle) -
-                remainingSeconds;
+            final int focusOnlySeconds = timerInfo.type == TimerType.focus?
+            (focusTotalSeconds * currentCycle) - remainingSeconds :
+            (focusTotalSeconds * currentCycle);
+            final int totalSeconds = timerInfo.type == TimerType.focus?
+            focusTotalSeconds * currentCycle + breakTotalSeconds * (currentCycle - 1) - remainingSeconds :
+            focusTotalSeconds * currentCycle + breakTotalSeconds * currentCycle - remainingSeconds;
 
             int focusOnlyMinutes = (focusOnlySeconds / 60).floor();
             int totalMinutes = (totalSeconds / 60).floor();
@@ -546,54 +557,59 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
     }
     */
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTapDown: (_) {},
-      onPanDown: (_) {},
+    return ConfirmBackWrapper(
+      onConfirmPop: () => context.go('/Timersettings'),
+      message: 'タイマーを中断して戻りますか？後から再開できません。',
       child: Scaffold(
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 20.0, right: 10.0),
-          child: FloatingActionButton.small(
-            heroTag: "wakelock_button",
-            onPressed: () {
-              setState(() {
-                _isWakelockEnabled = !_isWakelockEnabled;
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _isWakelockEnabled
-                        ? '画面を自動で消さずに表示し続けます。'
-                        : '画面は自動消灯に戻りました。',
-                  ),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
-            },
-            foregroundColor: Colors.white,
-            backgroundColor: _isWakelockEnabled
-                ? Colors.orange[200]
-                : Colors.blue[400],
-            tooltip: _isWakelockEnabled
-                ? '画面を常に ON にする設定が有効です'
-                : '画面を常に ON にする設定を有効化',
-            child: //const Text("☀"),
-            Icon(
-              _isWakelockEnabled
-                  ? CupertinoIcons.sun_max_fill
-                  : CupertinoIcons.moon_fill,
-              color: Colors.white,
-            ),
-          ),
-        ),
-
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              /*if (constraints.maxWidth < 600) {
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: (_) {},
+            onPanDown: (_) {},
+            child: Scaffold(
+              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+              floatingActionButton: Padding(
+                padding: const EdgeInsets.only(bottom: 20.0, right: 10.0),
+                child: FloatingActionButton.small(
+                  heroTag: "wakelock_button",
+                  onPressed: () {
+                    setState(() {
+                      _isWakelockEnabled = !_isWakelockEnabled;
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          _isWakelockEnabled
+                              ? '画面を自動で消さずに表示し続けます。'
+                              : '画面は自動消灯に戻りました。',
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  foregroundColor: Colors.white,
+                  backgroundColor: _isWakelockEnabled
+                      ? Colors.orange[200]
+                      : Colors.blue[400],
+                  tooltip: _isWakelockEnabled
+                      ? '画面を常に ON にする設定が有効です'
+                      : '画面を常に ON にする設定を有効化',
+                  child: //const Text("☀"),
+                  Icon(
+                    _isWakelockEnabled
+                        ? CupertinoIcons.sun_max_fill
+                        : CupertinoIcons.moon_fill,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+
+              body: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    /*if (constraints.maxWidth < 600) {
               // スマホ向け（現状の縦並び）
               return SingleChildScrollView(
                 child: Padding(
@@ -828,745 +844,748 @@ class _PomodoroTimerPageState extends ConsumerState<PomodoroTimerPage>
             }
              */
 
-              if (constraints.maxWidth < 600) {
-                // --- ヘルパー: 進捗率の計算 (0.0 ~ 1.0) ---
-                double progress = 0.0;
-                final int totalSeconds = () {
-                  if (timerInfo.type == TimerType.focus) {
-                    return settings.focusTotalSeconds;
-                  } else {
-                    return settings.breakTotalSeconds;
-                  }
-                }();
-                if (totalSeconds > 0) {
-                  progress = (totalSeconds == 0)
-                      ? 0
-                      : 1 - (timerInfo.remainingSeconds / totalSeconds);
-                }
-                // ------------------------------------------
+                    if (constraints.maxWidth < 600) {
+                      // --- ヘルパー: 進捗率の計算 (0.0 ~ 1.0) ---
+                      double progress = 0.0;
+                      final int totalSeconds = () {
+                        if (timerInfo.type == TimerType.focus) {
+                          return settings.focusTotalSeconds;
+                        } else {
+                          return settings.breakTotalSeconds;
+                        }
+                      }();
+                      if (totalSeconds > 0) {
+                        progress = (totalSeconds == 0)
+                            ? 0
+                            : 1 - (timerInfo.remainingSeconds / totalSeconds);
+                      }
+                      // ------------------------------------------
 
-                return Stack(
-                  fit: StackFit.expand, // 画面いっぱいに広げる
-                  children: [
-                    // --- 1. 背景動画レイヤー (休憩中で設定がONの場合のみ表示) ---
-                    if (shouldShowBreakScreen && isVideoReady)
-                      SizedBox.expand(
-                        child: FittedBox(
-                          fit: BoxFit.cover, // アスペクト比を維持して画面を埋める
-                          child: SizedBox(
-                            width: _videoController.value.size.width,
-                            height: _videoController.value.size.height,
-                            child: VideoPlayer(_videoController),
-                          ),
-                        ),
-                      ),
-
-                    // --- 2. フィルターレイヤー (文字を見やすくするための半透明の黒) ---
-                    if (shouldShowBreakScreen)
-                      Container(color: Colors.black.withValues(alpha: 0.3)),
-
-                    // --- 3. メインコンテンツ (既存のSingleChildScrollView) ---
-                    SingleChildScrollView(
-                      child: ConstrainedBox(
-                        // Containerの高さを画面サイズに合わせるための工夫
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 8.0,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Container(
-                                // 画面の高さ確保（スクロール可能だが、コンテンツが少ない時は中央に寄せるための制約）
-                                constraints: BoxConstraints(
-                                  minHeight: constraints.maxHeight - 20,
+                      return Stack(
+                        fit: StackFit.expand, // 画面いっぱいに広げる
+                        children: [
+                          // --- 1. 背景動画レイヤー (休憩中で設定がONの場合のみ表示) ---
+                          if (shouldShowBreakScreen && isVideoReady)
+                            SizedBox.expand(
+                              child: FittedBox(
+                                fit: BoxFit.cover, // アスペクト比を維持して画面を埋める
+                                child: SizedBox(
+                                  width: _videoController.value.size.width,
+                                  height: _videoController.value.size.height,
+                                  child: VideoPlayer(_videoController),
                                 ),
+                              ),
+                            ),
+
+                          // --- 2. フィルターレイヤー (文字を見やすくするための半透明の黒) ---
+                          if (shouldShowBreakScreen)
+                            Container(color: Colors.black.withValues(alpha: 0.3)),
+
+                          // --- 3. メインコンテンツ (既存のSingleChildScrollView) ---
+                          SingleChildScrollView(
+                            child: ConstrainedBox(
+                              // Containerの高さを画面サイズに合わせるための工夫
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 24.0,
-                                  vertical: 16.0,
+                                  horizontal: 16.0,
+                                  vertical: 8.0,
                                 ),
                                 child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    // 1. 目標・タスク表示エリア (コンパクトな開閉式)
-                                    currentGoal.when(
-                                      data: (goalWithTasks) {
-                                        if (goalWithTasks == null) {
-                                          return const Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: Text('目標なし', style: TextStyle(color: Colors.grey)),
-                                          );
-                                        }
-                                        return Container(
-                                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                          // --- 1. 土台：木製のボード ---
-                                          decoration: BoxDecoration(
-                                                        color: const Color(0xFF4E342E), // 濃い木の色
-                                                          borderRadius: BorderRadius.circular(8),
-                                            boxShadow: const [
-                                              BoxShadow(color: Colors.black45, blurRadius: 6, offset: Offset(0, 3)),
-                                            ],
-                                          ),
-                                          child: Stack(
-                                            children: [
-                                              // --- 2. メイン：羊皮紙風のExpansionTile ---
-                                              Padding(
-              padding: const EdgeInsets.all(8.0), // 木枠を見せるための余白
-              child: Theme(
-              // ExpansionTileの境界線を消すためのTheme
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: Container(
-              decoration: BoxDecoration(
-              // 羊皮紙グラデーション
-              gradient: const RadialGradient(
-              colors: [Color(0xFFE1D4A1), Color(0xFFE6D5B8), Color(0xFFF1EDDD), Color(0xFFFBEBAB)],
-              center: Alignment.bottomRight,
-              radius: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(4),
-              ),
-              child: ExpansionTile(
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-
-              // 閉じた状態の見出し
-              leading: Transform.rotate(
-              angle: -0.1,
-              child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF3E2723), width: 1),
-              ),
-              child: const Text(
-              'QUEST',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF3E2723)),
-              ),
-              ),
-              ),
-              title: Text(
-              goalWithTasks.goal.goal,
-              style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17,
-              fontFamily: 'Serif',
-              color: Color(0xFF3E2723),
-              ),
-              maxLines: 2, // 長い目標名も2行まで許容
-              overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-              "進捗: ${goalWithTasks.tasks.where((t) => t.isCompleted).length}/${goalWithTasks.tasks.length}  期限: ${DateFormat('MM/dd').format(goalWithTasks.goal.limit)}",
-              style: TextStyle(fontSize: 12, color: Colors.brown.shade700),
-              ),
-
-              // 開いた状態の中身
-              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              children: [
-              const Divider(color: Color(0x333E2723)),
-              if (goalWithTasks.tasks.isEmpty)
-              const Text("タスクなし", style: TextStyle(color: Colors.brown, fontStyle: FontStyle.italic))
-              else
-              ...goalWithTasks.tasks.map((task) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start, // 長文時もチェックを上に固定
-              children: [
-              // カスタムチェックボックス
-              Container(
-              margin: const EdgeInsets.only(top: 2),
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF3E2723), width: 2),
-              borderRadius: BorderRadius.circular(4),
-              color: task.isCompleted ? const Color(0xFF3E2723) : Colors.transparent,
-              ),
-              child: task.isCompleted
-              ? const Icon(Icons.check, size: 14, color: Color(0xFFF7F0D5))
-                  : null,
-              ),
-              const SizedBox(width: 12),
-              // タスク詳細
-              Expanded(
-              child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              Text(
-              task.task,
-              style: TextStyle(
-              fontSize: 15,
-              height: 1.2,
-              fontFamily: 'Serif',
-              decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-              color: task.isCompleted ? Colors.brown.withValues(alpha: 0.5) : const Color(0xFF3E2723),
-              ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-              '期限: ${DateFormat('MM/dd').format(task.limit)}',
-              style: const TextStyle(fontSize: 11, color: Colors.brown, fontWeight: FontWeight.bold),
-              ),
-              ],
-              ),
-              ),
-              ],
-              ),
-              )),
-              ],
-              ),
-              ),
-              ),
-              ),
-                                            ],
-                                          ),
-                                        );
-                                        },
-                                      loading: () => Text(
-                                        '読み込み中...',
-                                        style: TextStyle(
-                                          color: Colors.blue.shade200,
-                                        ),
+                                    Container(
+                                      // 画面の高さ確保（スクロール可能だが、コンテンツが少ない時は中央に寄せるための制約）
+                                      constraints: BoxConstraints(
+                                        minHeight: constraints.maxHeight - 20,
                                       ),
-                                      error: (_, __) => const SizedBox.shrink(),
-                                    ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24.0,
+                                        vertical: 16.0,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          // 1. 目標・タスク表示エリア (コンパクトな開閉式)
+                                          currentGoal.when(
+                                            data: (goalWithTasks) {
+                                              if (goalWithTasks == null) {
+                                                return const Padding(
+                                                  padding: EdgeInsets.all(16.0),
+                                                  child: Text('目標なし', style: TextStyle(color: Colors.grey)),
+                                                );
+                                              }
+                                              return Container(
+                                                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                                // --- 1. 土台：木製のボード ---
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF4E342E), // 濃い木の色
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  boxShadow: const [
+                                                    BoxShadow(color: Colors.black45, blurRadius: 6, offset: Offset(0, 3)),
+                                                  ],
+                                                ),
+                                                child: Stack(
+                                                  children: [
+                                                    // --- 2. メイン：羊皮紙風のExpansionTile ---
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0), // 木枠を見せるための余白
+                                                      child: Theme(
+                                                        // ExpansionTileの境界線を消すためのTheme
+                                                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            // 羊皮紙グラデーション
+                                                            gradient: const RadialGradient(
+                                                              colors: [Color(0xFFE1D4A1), Color(0xFFE6D5B8), Color(0xFFF1EDDD), Color(0xFFFBEBAB)],
+                                                              center: Alignment.bottomRight,
+                                                              radius: 1.5,
+                                                            ),
+                                                            borderRadius: BorderRadius.circular(4),
+                                                          ),
+                                                          child: ExpansionTile(
+                                                            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
 
-                                    const SizedBox(height: 20),
+                                                            // 閉じた状態の見出し
+                                                            leading: Transform.rotate(
+                                                              angle: -0.1,
+                                                              child: Container(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                                decoration: BoxDecoration(
+                                                                  border: Border.all(color: const Color(0xFF3E2723), width: 1),
+                                                                ),
+                                                                child: const Text(
+                                                                  'QUEST',
+                                                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF3E2723)),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            title: Text(
+                                                              goalWithTasks.goal.goal,
+                                                              style: const TextStyle(
+                                                                fontWeight: FontWeight.bold,
+                                                                fontSize: 17,
+                                                                fontFamily: 'Serif',
+                                                                color: Color(0xFF3E2723),
+                                                              ),
+                                                              maxLines: 2, // 長い目標名も2行まで許容
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                            subtitle: Text(
+                                                              "進捗: ${goalWithTasks.tasks.where((t) => t.isCompleted).length}/${goalWithTasks.tasks.length}  期限: ${DateFormat('MM/dd').format(goalWithTasks.goal.limit)}",
+                                                              style: TextStyle(fontSize: 12, color: Colors.brown.shade700),
+                                                            ),
 
-                                    // 2. タイマー & サイクル表示エリア (Stackで重ねて表示)
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        // 背景の円グラフ (プログレス)
-                                        SizedBox(
-                                          width: 280,
-                                          height: 280,
-                                          child: CircularProgressIndicator(
-                                            value: progress.clamp(0, 1.0),
-                                            strokeWidth: 12,
-                                            backgroundColor:
-                                                Colors.grey.shade100,
-                                            color:
-                                                timerInfo.type ==
-                                                    TimerType.focus
-                                                ? Colors.redAccent
-                                                : Colors.green,
-                                            strokeCap: StrokeCap.round,
-                                          ),
-                                        ),
-                                        // 中央の情報
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            // 状態ラベル (集中 or 休憩)
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 6,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    timerInfo.type ==
-                                                        TimerType.focus
-                                                    ? Colors.red.shade50
-                                                    : Colors.green.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                timerStateText, // Providerから取得したテキスト
-                                                style: TextStyle(
-                                                  color:
-                                                      timerInfo.type ==
-                                                          TimerType.focus
-                                                      ? Colors.red
-                                                      : Colors.green,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            // 残り時間（特大かつ等幅フォント）
-                                            Text(
-                                              formattedTime,
-                                              style: const TextStyle(
-                                                fontSize: 64,
-                                                fontWeight: FontWeight.bold,
-                                                fontFeatures: [
-                                                  FontFeature.tabularFigures(),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            // サイクル情報
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.repeat,
-                                                  size: 18,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  '${timerInfo.currentCycle} / ${timerInfo.totalCycles} サイクル',
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 30),
-
-                                    // 3. 操作ボタンエリア (大きく押しやすく)
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        // 再生・一時停止ボタン
-                                        SizedBox(
-                                          width: 80,
-                                          height: 80,
-                                          child: Column(
-                                            children: [
-                                              FloatingActionButton(
-                                                onPressed: () {
-                                                  if (timerInfo.state ==
-                                                      TimerState.running) {
-                                                    ref
-                                                        .read(
-                                                          timerInfoProvider
-                                                              .notifier,
-                                                        )
-                                                        .pauseTimer();
-                                                  } else {
-                                                    // 停止中または一時停止中なら開始/再開
-                                                    if (timerInfo.state ==
-                                                        TimerState.stopped) {
-                                                      ref
-                                                          .read(
-                                                            timerInfoProvider
-                                                                .notifier,
-                                                          )
-                                                          .startTimer(settings);
-                                                    } else {
-                                                      ref
-                                                          .read(
-                                                            timerInfoProvider
-                                                                .notifier,
-                                                          )
-                                                          .resumeTimer();
-                                                    }
-                                                  }
-                                                },
-                                                backgroundColor:
-                                                    timerInfo.state ==
-                                                        TimerState.running
-                                                    ? Colors.orangeAccent
-                                                    : Colors.blueAccent,
-                                                elevation: 4,
-                                                child: Icon(
-                                                  timerInfo.state ==
-                                                          TimerState.running
-                                                      ? Icons.pause_rounded
-                                                      : Icons
-                                                            .play_arrow_rounded,
-                                                  size: 48,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                timerInfo.state ==
-                                                        TimerState.running
-                                                    ? '一時停止'
-                                                    : '再開',
-                                                style: TextStyle(
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 30),
-                                        // 中断ボタン (少し小さめ)
-                                        Column(
-                                          children: [
-                                            IconButton.filledTonal(
-                                              onPressed: () {
-                                                ref
-                                                    .read(
-                                                      timerInfoProvider
-                                                          .notifier,
-                                                    )
-                                                    .pauseTimer();
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) => AlertDialog(
-                                                    title: const Text(
-                                                      '中断しますか？',
-                                                    ),
-                                                    content: const Text(
-                                                      '現在の経過時間を記録してセッションを終了します。',
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(
-                                                            context,
-                                                          ).pop();
-                                                          ref
-                                                              .read(
-                                                                timerInfoProvider
-                                                                    .notifier,
-                                                              )
-                                                              .resumeTimer();
-                                                        },
-                                                        child: const Text(
-                                                          'キャンセル',
+                                                            // 開いた状態の中身
+                                                            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                                            children: [
+                                                              const Divider(color: Color(0x333E2723)),
+                                                              if (goalWithTasks.tasks.isEmpty)
+                                                                const Text("タスクなし", style: TextStyle(color: Colors.brown, fontStyle: FontStyle.italic))
+                                                              else
+                                                                ...goalWithTasks.tasks.map((task) => Padding(
+                                                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                                                  child: Row(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start, // 長文時もチェックを上に固定
+                                                                    children: [
+                                                                      // カスタムチェックボックス
+                                                                      Container(
+                                                                        margin: const EdgeInsets.only(top: 2),
+                                                                        width: 18,
+                                                                        height: 18,
+                                                                        decoration: BoxDecoration(
+                                                                          border: Border.all(color: const Color(0xFF3E2723), width: 2),
+                                                                          borderRadius: BorderRadius.circular(4),
+                                                                          color: task.isCompleted ? const Color(0xFF3E2723) : Colors.transparent,
+                                                                        ),
+                                                                        child: task.isCompleted
+                                                                            ? const Icon(Icons.check, size: 14, color: Color(0xFFF7F0D5))
+                                                                            : null,
+                                                                      ),
+                                                                      const SizedBox(width: 12),
+                                                                      // タスク詳細
+                                                                      Expanded(
+                                                                        child: Column(
+                                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                              task.task,
+                                                                              style: TextStyle(
+                                                                                fontSize: 15,
+                                                                                height: 1.2,
+                                                                                fontFamily: 'Serif',
+                                                                                decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                                                                                color: task.isCompleted ? Colors.brown.withValues(alpha: 0.5) : const Color(0xFF3E2723),
+                                                                              ),
+                                                                            ),
+                                                                            const SizedBox(height: 2),
+                                                                            Text(
+                                                                              '期限: ${DateFormat('MM/dd').format(task.limit)}',
+                                                                              style: const TextStyle(fontSize: 11, color: Colors.brown, fontWeight: FontWeight.bold),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                )),
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(
-                                                            context,
-                                                          ).pop();
-                                                          _showConcentrationModal(
-                                                            settings,
-                                                          );
-                                                        },
-                                                        child: const Text(
-                                                          '中断して記録',
-                                                          style: TextStyle(
-                                                            color: Colors.red,
-                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                            loading: () => Text(
+                                              '読み込み中...',
+                                              style: TextStyle(
+                                                color: Colors.blue.shade200,
+                                              ),
+                                            ),
+                                            error: (_, __) => const SizedBox.shrink(),
+                                          ),
+
+                                          const SizedBox(height: 20),
+
+                                          // 2. タイマー & サイクル表示エリア (Stackで重ねて表示)
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              // 背景の円グラフ (プログレス)
+                                              SizedBox(
+                                                width: 280,
+                                                height: 280,
+                                                child: CircularProgressIndicator(
+                                                  value: progress.clamp(0, 1.0),
+                                                  strokeWidth: 12,
+                                                  backgroundColor:
+                                                  Colors.white,
+                                                  color:
+                                                  timerInfo.type ==
+                                                      TimerType.focus
+                                                      ? ParadiseColors.subaccentGold
+                                                      : ParadiseColors.primaryTeal,
+                                                  strokeCap: StrokeCap.round,
+                                                ),
+                                              ),
+                                              // 中央の情報
+                                              Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  // 状態ラベル (集中 or 休憩)
+                                                  Container(
+                                                    padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 6,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                      timerInfo.type ==
+                                                          TimerType.focus
+                                                          ? Colors.red.shade50
+                                                          : Colors.green.shade50,
+                                                      borderRadius:
+                                                      BorderRadius.circular(20),
+                                                    ),
+                                                    child: Text(
+                                                      timerStateText, // Providerから取得したテキスト
+                                                      style: TextStyle(
+                                                        color:
+                                                        timerInfo.type ==
+                                                            TimerType.focus
+                                                            ? Colors.red
+                                                            : Colors.green,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  // 残り時間（特大かつ等幅フォント）
+                                                  Text(
+                                                    formattedTime,
+                                                    style: const TextStyle(
+                                                      fontSize: 64,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontFeatures: [
+                                                        FontFeature.tabularFigures(),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  // サイクル情報
+                                                  Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.repeat,
+                                                        size: 18,
+                                                        color: Colors.grey.shade600,
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        '${timerInfo.currentCycle} / ${timerInfo.totalCycles} サイクル',
+                                                        style: TextStyle(
+                                                          fontSize: 18,
+                                                          color: Colors.black,
+                                                          fontWeight: FontWeight.w600,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
-                                                );
-                                              },
-                                              icon: const Icon(
-                                                Icons.stop_rounded,
-                                                color: Colors.red,
+                                                ],
                                               ),
-                                              iconSize: 32,
-                                              style: IconButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.red.shade50,
+                                            ],
+                                          ),
+
+                                          const SizedBox(height: 30),
+
+                                          // 3. 操作ボタンエリア (大きく押しやすく)
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                            children: [
+                                              // 再生・一時停止ボタン
+                                              SizedBox(
+                                                width: 80,
+                                                height: 80,
+                                                child: Column(
+                                                  children: [
+                                                    FloatingActionButton(
+                                                      onPressed: () {
+                                                        if (timerInfo.state ==
+                                                            TimerState.running) {
+                                                          ref
+                                                              .read(
+                                                            timerInfoProvider
+                                                                .notifier,
+                                                          )
+                                                              .pauseTimer();
+                                                        } else {
+                                                          // 停止中または一時停止中なら開始/再開
+                                                          if (timerInfo.state ==
+                                                              TimerState.stopped) {
+                                                            ref
+                                                                .read(
+                                                              timerInfoProvider
+                                                                  .notifier,
+                                                            )
+                                                                .startTimer(settings);
+                                                          } else {
+                                                            ref
+                                                                .read(
+                                                              timerInfoProvider
+                                                                  .notifier,
+                                                            )
+                                                                .resumeTimer();
+                                                          }
+                                                        }
+                                                      },
+                                                      backgroundColor:
+                                                      timerInfo.state ==
+                                                          TimerState.running
+                                                          ? Colors.orangeAccent
+                                                          : Colors.blueAccent,
+                                                      elevation: 4,
+                                                      child: Icon(
+                                                        timerInfo.state ==
+                                                            TimerState.running
+                                                            ? Icons.pause_rounded
+                                                            : Icons
+                                                            .play_arrow_rounded,
+                                                        size: 48,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      timerInfo.state ==
+                                                          TimerState.running
+                                                          ? '一時停止'
+                                                          : '再開',
+                                                      style: TextStyle(
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            const Text(
-                                              '中断',
+                                              const SizedBox(width: 30),
+                                              // 中断ボタン (少し小さめ)
+                                              Column(
+                                                children: [
+                                                  IconButton.filledTonal(
+                                                    onPressed: () {
+                                                      ref
+                                                          .read(
+                                                        timerInfoProvider
+                                                            .notifier,
+                                                      )
+                                                          .pauseTimer();
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) => AlertDialog(
+                                                          title: const Text(
+                                                            '中断しますか？',
+                                                          ),
+                                                          content: const Text(
+                                                            '現在の経過時間を記録してセッションを終了します。',
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                  context,
+                                                                ).pop();
+                                                                ref
+                                                                    .read(
+                                                                  timerInfoProvider
+                                                                      .notifier,
+                                                                )
+                                                                    .resumeTimer();
+                                                              },
+                                                              child: const Text(
+                                                                'キャンセル',
+                                                              ),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                  context,
+                                                                ).pop();
+                                                                _showConcentrationModal(
+                                                                  settings,
+                                                                );
+                                                              },
+                                                              child: const Text(
+                                                                '中断して記録',
+                                                                style: TextStyle(
+                                                                  color: Colors.red,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.stop_rounded,
+                                                      color: Colors.red,
+                                                    ),
+                                                    iconSize: 32,
+                                                    style: IconButton.styleFrom(
+                                                      backgroundColor:
+                                                      Colors.red.shade50,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  const Text(
+                                                    '中断',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                          OutlinedButton(
+                                            onPressed: () =>
+                                                context.go('/Timersettings'),
+                                            child: const Text(
+                                              '設定を変更',
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
+                                                color: Colors.blueAccent,
                                               ),
                                             ),
-                                          ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // タブレット・PC向け（2カラム）
+                      return Center(
+                        child: SizedBox(
+                          width: 900,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 左カラム: タイマー情報
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: 40),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                        horizontal: 32,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: timerInfo.type == TimerType.focus
+                                            ? Colors.red.shade50
+                                            : Colors.green.shade50,
+                                        borderRadius: BorderRadius.circular(25),
+                                        border: Border.all(
+                                          color: timerInfo.type == TimerType.focus
+                                              ? Colors.red.shade200
+                                              : Colors.green.shade200,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        timerStateText,
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: timerInfo.type == TimerType.focus
+                                              ? Colors.red.shade700
+                                              : Colors.green.shade700,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 40),
+                                    Container(
+                                      padding: const EdgeInsets.all(48),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(32),
+                                        border: Border.all(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const Text(
+                                            '残り時間',
+                                            style: TextStyle(
+                                              fontSize: 22,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            formattedTime,
+                                            style: const TextStyle(
+                                              fontSize: 64,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (timerInfo.type == TimerType.focus)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12.0),
+                                        child: LinearPercentIndicator(
+                                          lineHeight: 8.0,
+                                          percent:
+                                          1 -
+                                              timerInfo.remainingSeconds /
+                                                  settings.focusTotalSeconds,
+                                          backgroundColor: Colors.grey.shade300,
+                                          progressColor: Colors.green,
+                                          animation: true,
+                                          animateFromLastPercent: true,
+                                          alignment: MainAxisAlignment.center,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 40),
+                              // 右カラム: 目標・サイクル・ボタン群
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: 40),
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.blue.shade200,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.flag, color: Colors.blue),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: currentGoal.when(
+                                              data: (goal) => CurrentGoalOverview(
+                                                goalWithTasks: goal!,
+                                              ),
+
+                                              loading: () => Text(
+                                                '目標を読み込み中...',
+                                                style: TextStyle(
+                                                  color: Colors.blue.shade200,
+                                                ),
+                                              ),
+                                              error: (e, _) => Text(
+                                                '目標の取得に失敗しました',
+                                                style: TextStyle(color: Colors.red),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 40),
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade50,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.orange.shade200,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.repeat,
+                                            color: Colors.orange,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'サイクル ${timerInfo.currentCycle} / ${timerInfo.totalCycles}',
+                                            style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.orange,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 60),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (timerInfo.state != TimerState.stopped)
+                                          ElevatedButton.icon(
+                                            onPressed: () {
+                                              if (timerInfo.state ==
+                                                  TimerState.running) {
+                                                ref
+                                                    .read(timerInfoProvider.notifier)
+                                                    .pauseTimer();
+                                              } else if (timerInfo.state ==
+                                                  TimerState.paused) {
+                                                ref
+                                                    .read(timerInfoProvider.notifier)
+                                                    .resumeTimer();
+                                              }
+                                            },
+                                            icon: Icon(
+                                              timerInfo.state == TimerState.running
+                                                  ? Icons.pause
+                                                  : Icons.play_arrow,
+                                            ),
+                                            label: Text(
+                                              timerInfo.state == TimerState.running
+                                                  ? '一時停止'
+                                                  : '再開',
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 32,
+                                                vertical: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        const SizedBox(width: 32),
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: const Text('タイマーを中断しますか？'),
+                                                content: const Text(
+                                                  '現在のセッションがリセットされます。',
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context).pop(),
+                                                    child: const Text('キャンセル'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context).pop();
+                                                      _showConcentrationModal(
+                                                        settings,
+                                                      );
+
+                                                      ///中断
+                                                    },
+                                                    child: const Text('中断'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.stop),
+                                          label: const Text('中断'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 32,
+                                              vertical: 20,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
-                                    OutlinedButton(
-                                      onPressed: () =>
-                                          context.go('/Timersettings'),
-                                      child: const Text(
-                                        '設定を変更',
-                                        style: TextStyle(
-                                          color: Colors.blueAccent,
-                                        ),
+                                    const SizedBox(height: 30),
+                                    SizedBox(
+                                      width: 250,
+                                      child: OutlinedButton(
+                                        onPressed: () => context.go('/Timersettings'),
+                                        child: const Text('設定を変更'),
                                       ),
                                     ),
-                                    const SizedBox(height: 20),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                );
-              } else {
-                // タブレット・PC向け（2カラム）
-                return Center(
-                  child: SizedBox(
-                    width: 900,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 左カラム: タイマー情報
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 40),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                  horizontal: 32,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: timerInfo.type == TimerType.focus
-                                      ? Colors.red.shade50
-                                      : Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(25),
-                                  border: Border.all(
-                                    color: timerInfo.type == TimerType.focus
-                                        ? Colors.red.shade200
-                                        : Colors.green.shade200,
-                                  ),
-                                ),
-                                child: Text(
-                                  timerStateText,
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: timerInfo.type == TimerType.focus
-                                        ? Colors.red.shade700
-                                        : Colors.green.shade700,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                              Container(
-                                padding: const EdgeInsets.all(48),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(32),
-                                  border: Border.all(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    const Text(
-                                      '残り時間',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      formattedTime,
-                                      style: const TextStyle(
-                                        fontSize: 64,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'monospace',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (timerInfo.type == TimerType.focus)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 12.0),
-                                  child: LinearPercentIndicator(
-                                    lineHeight: 8.0,
-                                    percent:
-                                        1 -
-                                        timerInfo.remainingSeconds /
-                                            settings.focusTotalSeconds,
-                                    backgroundColor: Colors.grey.shade300,
-                                    progressColor: Colors.green,
-                                    animation: true,
-                                    animateFromLastPercent: true,
-                                    alignment: MainAxisAlignment.center,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 40),
-                        // 右カラム: 目標・サイクル・ボタン群
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(height: 40),
-                              Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.blue.shade200,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.flag, color: Colors.blue),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: currentGoal.when(
-                                        data: (goal) => CurrentGoalOverview(
-                                          goalWithTasks: goal!,
-                                        ),
-
-                                        loading: () => Text(
-                                          '目標を読み込み中...',
-                                          style: TextStyle(
-                                            color: Colors.blue.shade200,
-                                          ),
-                                        ),
-                                        error: (e, _) => Text(
-                                          '目標の取得に失敗しました',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                              Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Colors.orange.shade200,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.repeat,
-                                      color: Colors.orange,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'サイクル ${timerInfo.currentCycle} / ${timerInfo.totalCycles}',
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.orange,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 60),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (timerInfo.state != TimerState.stopped)
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        if (timerInfo.state ==
-                                            TimerState.running) {
-                                          ref
-                                              .read(timerInfoProvider.notifier)
-                                              .pauseTimer();
-                                        } else if (timerInfo.state ==
-                                            TimerState.paused) {
-                                          ref
-                                              .read(timerInfoProvider.notifier)
-                                              .resumeTimer();
-                                        }
-                                      },
-                                      icon: Icon(
-                                        timerInfo.state == TimerState.running
-                                            ? Icons.pause
-                                            : Icons.play_arrow,
-                                      ),
-                                      label: Text(
-                                        timerInfo.state == TimerState.running
-                                            ? '一時停止'
-                                            : '再開',
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 32,
-                                          vertical: 20,
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(width: 32),
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => AlertDialog(
-                                          title: const Text('タイマーを中断しますか？'),
-                                          content: const Text(
-                                            '現在のセッションがリセットされます。',
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
-                                              child: const Text('キャンセル'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                _showConcentrationModal(
-                                                  settings,
-                                                );
-
-                                                ///中断
-                                              },
-                                              child: const Text('中断'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.stop),
-                                    label: const Text('中断'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 32,
-                                        vertical: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 30),
-                              SizedBox(
-                                width: 250,
-                                child: OutlinedButton(
-                                  onPressed: () => context.go('/Timersettings'),
-                                  child: const Text('設定を変更'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-            },
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
           ),
         ),
       ),

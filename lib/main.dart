@@ -7,6 +7,7 @@ import 'package:pomo_timer/pages/draftevalation_page.dart';
 import 'package:pomo_timer/pages/app_settings_page.dart';
 
 import 'package:pomo_timer/pages/pages.dart';
+import 'package:pomo_timer/theme/app_theme.dart';
 import 'package:pomo_timer/widgets/concentration_bottomsheet.dart';
 
 import 'data/database/daos/score_dao.dart';
@@ -38,6 +39,7 @@ class MyMainPage extends ConsumerWidget {
           builder: (context, state, child) {
             final location = state.uri.toString();
             final isSettingsPage = location.startsWith('/settings');
+            final isTimerPage = location.endsWith('/Timer');
             int currentIndex = 0;
             if (location.startsWith('/Timersettings') || location.startsWith('/Timer')) {
               currentIndex = 1;
@@ -76,13 +78,13 @@ class MyMainPage extends ConsumerWidget {
                   onPressed: () => context.pop(),
                 ),
                 title: const Text('設定画面'),
-                backgroundColor: Colors.lightBlue.shade200,
-                foregroundColor: Colors.blue.shade900,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
               )
                   : AppBar(
                 title: const Text('ポモドーロタイマー'),
-                backgroundColor: Colors.white,
-                foregroundColor: Color(0xFFE8C957),
+                backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.settings),
@@ -93,7 +95,9 @@ class MyMainPage extends ConsumerWidget {
               ),
 
               body: child,
-              bottomNavigationBar: BottomNavigationBar(
+              bottomNavigationBar: isTimerPage?
+                  null :
+              BottomNavigationBar(
                 currentIndex: currentIndex,
                 onTap: (index) {
                   switch (index) {
@@ -118,6 +122,7 @@ class MyMainPage extends ConsumerWidget {
                         width: 24,
                         height: 24,
                       ),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       label: 'ホーム'),
 
                   BottomNavigationBarItem(
@@ -126,7 +131,7 @@ class MyMainPage extends ConsumerWidget {
                       width: 24,
                       height: 24,
                     ),
-
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     label: '設定',
                   ),
                   BottomNavigationBarItem(
@@ -135,6 +140,7 @@ class MyMainPage extends ConsumerWidget {
                         width: 24,
                         height: 24,
                       ),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       label: '目標'),
                   BottomNavigationBarItem(
                     icon: Image.asset(
@@ -142,12 +148,14 @@ class MyMainPage extends ConsumerWidget {
                       width: 24,
                       height: 24,
                     ),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     label: '記録',
                   ),
                 ],
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: Colors.orange.shade800,
+                type: BottomNavigationBarType.shifting,
+                selectedItemColor: Theme.of(context).colorScheme.secondary,
                 unselectedItemColor: Colors.grey,
+                backgroundColor: Colors.white,
               ),
             ),
             );
@@ -249,6 +257,10 @@ class MyMainPage extends ConsumerWidget {
       ],
     );
 
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(
+      title: 'ポモドーロタイマー',
+      theme: AppTheme.lightTheme,
+      routerConfig: router
+    );
   }
 }

@@ -993,7 +993,8 @@ class AnimatedScoreModalState extends State<AnimatedScoreModal>
 
       // 演出の分岐
       if (scoreRatio >= 0.9) {
-        // 9割以上：左右から発射
+        // 9割以上：中央左右から発射
+        _confettiCenter.play();
         _confettiLeft.play();
         _confettiRight.play();
       } else if (scoreRatio >= 0.75) {

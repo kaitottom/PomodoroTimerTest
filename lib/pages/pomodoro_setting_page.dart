@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/pomodoro_settings_provider.dart';
 import '../providers/timer_provider.dart';
 //import '../models/pomodoro_settings.dart';
+import '../theme/app_colors.dart';
 import '../widgets/setting_card.dart';
 import '../widgets/time_setting_card.dart';
 
@@ -14,6 +15,7 @@ class PomodoroSettingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(pomodoroSettingsProvider);
     final settingsNotifier = ref.read(pomodoroSettingsProvider.notifier);
+    final int maxCycle = 20;
 
     return Scaffold(
       body: SafeArea(
@@ -106,10 +108,10 @@ class PomodoroSettingPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       SettingCard(
-                        title: 'サイクル数\n上限10サイクル',
+                        title: 'サイクル数\n上限$maxCycleサイクル',
                         value: settings.cycles,
                         onIncrement: () {
-                          if (settings.cycles < 10) {
+                          if (settings.cycles < maxCycle) {
                             settingsNotifier.updateCycles(settings.cycles + 1);
                           }
                         },
@@ -120,7 +122,7 @@ class PomodoroSettingPage extends ConsumerWidget {
                         },
                         onChanged: (value) {
                           final cycles = int.tryParse(value) ?? 4;
-                          if (cycles >= 1 && cycles <= 10) {
+                          if (cycles >= 1 && cycles <= maxCycle) {
                             settingsNotifier.updateCycles(cycles);
                           }
                         },
@@ -135,7 +137,7 @@ class PomodoroSettingPage extends ConsumerWidget {
                           context.push('/Timer');
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: ParadiseColors.skyDeepBlue,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -220,7 +222,7 @@ class PomodoroSettingPage extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: SettingCard(
-                                      title: 'サイクル数\n上限10サイクル',
+                                      title: 'サイクル数\n上限$maxCycleサイクル',
                                       value: settings.cycles,
                                       onIncrement: () {
                                         if (settings.cycles < 10) {
@@ -260,7 +262,7 @@ class PomodoroSettingPage extends ConsumerWidget {
                                 context.push('/Timer');
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor:  ParadiseColors.skyDeepBlue,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,

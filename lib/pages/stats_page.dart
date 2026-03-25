@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pomo_timer/models/goal_with_tasks.dart';
+import 'package:pomo_timer/theme/app_colors.dart';
 
 import '../providers.dart';
 import '../providers/database_provider.dart';
@@ -1012,26 +1014,68 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.rate_review, color: Colors.purple),
-                    const SizedBox(width: 8),
-                    Text(
-                      '振り返り記録 (${reflections.length}件)',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple.shade900,
+
+                    // 1段目
+                    Row(
+                      children: [
+                        const Icon(Icons.rate_review, color: Colors.purple),
+                        const SizedBox(width: 8),
+
+                        Text(
+                          '振り返り記録 (${reflections.length}件)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple.shade900,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        TextButton.icon(
+                          onPressed: () =>
+                              setState(() => _isReflectionsAscending = !_isReflectionsAscending),
+                          icon: Icon(
+                            _isReflectionsAscending
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                            size: 16,
+                          ),
+                          label: Text(_isReflectionsAscending ? '昇順' : '降順'),
+                        ),
+                      ],
+                    ),
+
+                    // 2段目（ページャー）
+                    if (totalPages > 1)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: currentPage > 1
+                                ? () => setState(() => _reflectionPage--)
+                                : null,
+                          ),
+
+                          Text('$currentPage / $totalPages'),
+
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: currentPage < totalPages
+                                ? () => setState(() => _reflectionPage++)
+                                : null,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 12,),
-                    TextButton.icon(
-                      onPressed: () => setState(() => _isReflectionsAscending = !_isReflectionsAscending),
-                      icon: Icon(_isReflectionsAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 16),
-                      label: Text(_isReflectionsAscending ? '昇順' : '降順'),
-                    ),
                   ],
                 ),
               ),
+
               const Divider(height: 1),
 
               ListView.builder(
@@ -1049,101 +1093,129 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                           (score.futurePlans != null &&
                               score.futurePlans!.isNotEmpty);
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.purple.shade100,
-                      child: const Icon(Icons.rate_review, color: Colors.purple, size: 20),
-                    ),
-                    title: Text(reflection.score.goalName ?? '目標なし',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Wrap(
-                      alignment: WrapAlignment.start,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 2,    // 横方向の要素間の隙間
-                      runSpacing: 4, // 折り返した時の縦方向の隙間
+                  return Slidable(
+                    key: ValueKey(reflection.score.id),
+                    // スワイプした時に出てくるボタン（右側に配置）
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(), // 追従する動き
+                      extentRatio: 0.25, // ★スワイプが止まる位置（横幅の25%で止まる）
                       children: [
-                        Text(
-                          DateFormat('yyyy/MM/dd HH:mm').format(score.startedAt),
-                          style: const TextStyle(fontSize: 12),
+                        SlidableAction(
+                          onPressed: (context) async {
+                            // 確認ダイアログを表示
+                            final confirmed = await _showDeleteConfirmation(context);
+                            if (confirmed == true) {
+                              // 振り返りテキストのみ削除
+                              ref.read(scoreDaoProvider).clearReflectionOnly(reflection.score.id);
+                            }
+                          },
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete_sweep,
+                          label: '消去',
+                          // スワイプしすぎても勝手に実行されない設定
+                          autoClose: true,
                         ),
-                        const SizedBox(width: 6),
-                        const SizedBox(height: 4),
-                            if (score.goodPoints != null &&
-                                score.goodPoints!.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade100,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  '良かった点',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ),
-                            if (score.goodPoints != null &&
-                                score.goodPoints!.isNotEmpty &&
-                                (score.improvementPoints != null &&
-                                    score.improvementPoints!.isNotEmpty ||
-                                    score.futurePlans != null &&
-                                        score.futurePlans!.isNotEmpty))
-                              const SizedBox(width: 4),
-                            if (score.improvementPoints != null &&
-                                score.improvementPoints!.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade100,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  '改善点',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ),
-                            if (score.improvementPoints != null &&
-                                score.improvementPoints!.isNotEmpty &&
-                                score.futurePlans != null &&
-                                score.futurePlans!.isNotEmpty)
-                              const SizedBox(width: 4),
-                            if (score.futurePlans != null &&
-                                score.futurePlans!.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  '今後の方針',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ),
                       ],
                     ),
-                    trailing: const Icon(Icons.chevron_right, size: 16),
-                    onTap: () {
-                      _showReflectionDetailDialog(context, reflection);
-                    },
+
+                    // メインのコンテンツ（既存のカード）
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.purple.shade100,
+                        child: const Icon(Icons.rate_review, color: Colors.purple, size: 20),
+                      ),
+                      title: Text(reflection.score.goalName ?? '目標なし',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 2,    // 横方向の要素間の隙間
+                        runSpacing: 4, // 折り返した時の縦方向の隙間
+                        children: [
+                          Text(
+                            DateFormat('yyyy/MM/dd HH:mm').format(score.startedAt),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(width: 6),
+                          const SizedBox(height: 4),
+                          if (score.goodPoints != null &&
+                              score.goodPoints!.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '良かった点',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ),
+                          if (score.goodPoints != null &&
+                              score.goodPoints!.isNotEmpty &&
+                              (score.improvementPoints != null &&
+                                  score.improvementPoints!.isNotEmpty ||
+                                  score.futurePlans != null &&
+                                      score.futurePlans!.isNotEmpty))
+                            const SizedBox(width: 4),
+                          if (score.improvementPoints != null &&
+                              score.improvementPoints!.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '改善点',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ),
+                          if (score.improvementPoints != null &&
+                              score.improvementPoints!.isNotEmpty &&
+                              score.futurePlans != null &&
+                              score.futurePlans!.isNotEmpty)
+                            const SizedBox(width: 4),
+                          if (score.futurePlans != null &&
+                              score.futurePlans!.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '今後の方針',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.chevron_right, size: 16),
+                      onTap: () {
+                        _showReflectionDetailDialog(context, reflection);
+                      },
+                    ),
                   );
                 },
               ),
@@ -1300,6 +1372,34 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                     ),
                   ),
                 ),
+                SizedBox(height: 16),
+                Divider(),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final confirm = await _showConfirmDialog(
+                      context,
+                      title: '振り返りの消去',
+                      content: 'この記録の振り返り内容のみを消去しますか？\n（統計データは保持されます）',
+                    );
+
+                    if (confirm == true) {
+                      await ref.read(scoreDaoProvider).clearReflectionOnly(score.id);
+                      if (context.mounted) Navigator.of(context).pop();
+                    }
+                  },
+                  icon: const Icon(Icons.auto_fix_off, size: 18), // 「整える・消す」イメージ
+                  label: const Text('振り返りのみを消去'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ParadiseColors.subaccentGold.withValues(alpha: 0.2), // 淡いゴールド
+                    foregroundColor: ParadiseColors.deepText,
+                    elevation: 0,
+                    side: const BorderSide(color: ParadiseColors.subaccentGold), // 枠線でボタン感を出す
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
+                SizedBox(height: 16),
               ],
             ),
           ),
@@ -1639,4 +1739,44 @@ class _StatItem extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<bool?> _showDeleteConfirmation(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('記録の削除'),
+      content: const Text('このデータを削除してもよろしいですか？\nこの操作は取り消せません。'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('キャンセル'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('削除'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool?> _showConfirmDialog(BuildContext context, {required String title, required String content}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title, style: const TextStyle(color: ParadiseColors.deepText, fontWeight: FontWeight.bold)),
+      content: Text(content),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          child: const Text('実行する'),
+        ),
+      ],
+    ),
+  );
 }
