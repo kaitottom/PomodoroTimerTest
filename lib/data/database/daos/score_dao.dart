@@ -392,6 +392,17 @@ class ScoreDao extends DatabaseAccessor<AppDatabase> with _$ScoreDaoMixin {
     // ★変更: TaskScoresTableの削除は不要（JSONは自動削除）
     await (delete(scoresTable)..where((t) => t.id.equals(id))).go();
   }
+
+  // score_dao.dart に追加
+  Future<void> clearReflectionOnly(int id) {
+    return (update(scoresTable)..where((t) => t.id.equals(id))).write(
+      const ScoresTableCompanion(
+        goodPoints: Value(null),
+        improvementPoints: Value(null),
+        futurePlans: Value(null),
+      ),
+    );
+  }
 }
 
 // ※ Daoからの戻り値用の一時クラス（DTO）

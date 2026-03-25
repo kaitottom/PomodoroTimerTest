@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:pomo_timer/theme/app_colors.dart';
 import '../data/database/app_database.dart';
 
 // 2025/11/18 引数をGoalSettingDataからGoalSaveCallbackという差分返すように変えた。
@@ -128,16 +129,16 @@ class GoalFormState extends State<GoalForm> {
           min: 1, max: 5, divisions: 4,
           label: '$_importance',
           onChanged: (value) => setState(() => _importance = value.round()),
-          thumbColor: Colors.pinkAccent,
-          activeColor: Colors.pink,
-          inactiveColor: Colors.grey,
+          thumbColor: ParadiseColors.skyDeepBlue,
+          activeColor: ParadiseColors.crystalRock,
+          inactiveColor: ParadiseColors.cloudGrey,
         ),
         // ... (影響度スライダーも同様)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('影響度：', style: TextStyle(fontSize: 15)),
-            Text('$_impact', style: const TextStyle(fontSize: 15)),///
+            Text('$_impact', style: const TextStyle(fontSize: 15)),
           ],
         ),
         Slider(
@@ -145,9 +146,8 @@ class GoalFormState extends State<GoalForm> {
           min: 1, max: 5, divisions: 4,
           label: '$_impact',
           onChanged: (value) => setState(() => _impact = value.round()),
-          thumbColor: Colors.blue,
-          activeColor: Colors.lightBlue,
-          inactiveColor: Colors.grey,
+          thumbColor: ParadiseColors.groundBlue,
+          activeColor: ParadiseColors.crystalRock,
         ),
         const SizedBox(height: 16),
         Row(

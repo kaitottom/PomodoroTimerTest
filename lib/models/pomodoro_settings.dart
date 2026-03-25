@@ -32,6 +32,7 @@ class PomodoroSettings {
   // 集中時間を秒単位で取得
   int get focusTotalSeconds => focusMinutes * 60 + focusSeconds;
 
+
   // 休憩時間を秒単位で取得
   int get breakTotalSeconds => breakMinutes * 60 + breakSeconds;
 }

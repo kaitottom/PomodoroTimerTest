@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomo_timer/theme/app_colors.dart';
 import '../models/app_settings.dart';
 import '../models/timer_info.dart';
 import '../providers/app_settings_provider.dart';
@@ -46,6 +47,23 @@ class AppSettingsPage extends ConsumerWidget {
               _buildSectionHeader('キャラクター設定', isComingSoon: true),
               const SizedBox(height: 8),
               _buildComingSoonCard(),
+
+              const SizedBox(height: 24),
+
+              _buildSectionHeader('お問い合わせページへ'),
+              const SizedBox(height: 8),
+
+              Card(
+                child: ListTile(
+                  title: const Text('お問い合わせ'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // 問い合わせページへ遷移
+                    // 例 context.go('/contact');
+                  },
+                ),
+              ),
+
             ],
           ),
         ),
@@ -61,7 +79,7 @@ class AppSettingsPage extends ConsumerWidget {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.orange.shade800,
+            color: ParadiseColors.deepText,
           ),
         ),
         if (isComingSoon) ...[
@@ -160,21 +178,28 @@ class AppSettingsPage extends ConsumerWidget {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              ...BreakBackgroundType.values.map((type) {
-                return RadioListTile<BreakBackgroundType>(
-                  title: Text(_getBackgroundTypeLabel(type)),
-                  subtitle: Text(_getBackgroundTypeDescription(type)),
-                  value: type,
-                  groupValue: settings.breakBackgroundType,
-                  onChanged: (value) {
-                    if (value != null) {
-                      settingsNotifier.setBreakBackgroundType(value);
-                    }
-                  },
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                );
-              }),
+              DropdownMenu<BreakBackgroundType>(
+                initialSelection: settings.breakBackgroundType,
+                expandedInsets: EdgeInsets.zero,
+                dropdownMenuEntries: BreakBackgroundType.values.map((type) {
+                  return DropdownMenuEntry<BreakBackgroundType>(
+                    value: type,
+                    label: _getBackgroundTypeLabel(type),
+                  );
+                }).toList(),
+                onSelected: (value) {
+                  if (value != null) {
+                    settingsNotifier.setBreakBackgroundType(value);
+                  }
+                },
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                _getBackgroundTypeDescription(settings.breakBackgroundType),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ],
         ),
@@ -243,8 +268,16 @@ class AppSettingsPage extends ConsumerWidget {
         return '森';
       case BreakBackgroundType.sea:
         return '海';
+      case BreakBackgroundType.undersea:
+        return '海中';
       case BreakBackgroundType.onsen:
         return '温泉';
+      case BreakBackgroundType.sky:
+        return '空';
+      case BreakBackgroundType.lavender:
+        return 'ラベンダー畑';
+      case BreakBackgroundType.snow:
+        return '雪';
     }
   }
 
@@ -254,8 +287,16 @@ class AppSettingsPage extends ConsumerWidget {
         return '森の風景を表示します';
       case BreakBackgroundType.sea:
         return '海の風景を表示します';
+      case BreakBackgroundType.undersea:
+        return '海中での景色を表示します';
       case BreakBackgroundType.onsen:
         return '温泉の風景を表示します';
+      case BreakBackgroundType.sky:
+        return '空の景色を表示します';
+      case BreakBackgroundType.lavender:
+        return 'ラベンダー畑の風景を表示します';
+      case BreakBackgroundType.snow:
+        return '雪の景色を表示します';
     }
   }
 }

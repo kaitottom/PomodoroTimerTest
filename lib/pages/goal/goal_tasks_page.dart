@@ -53,7 +53,7 @@ class _GoalTasksPageState extends ConsumerState<GoalTasksPage> {
     final currentGoal = ref.read(tempGoalProvider);
     if (currentGoal != null && currentGoal.tasks.isEmpty) {
       // 初回設定時のみAIタスクを生成
-      // TODO: DifyAIから生成されたタスクを取得して追加
+
       // 現在はサンプルタスクを追加（実際のAI連携時は削除）
       _addSampleAiTasks();
     }

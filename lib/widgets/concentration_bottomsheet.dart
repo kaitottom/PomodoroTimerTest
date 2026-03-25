@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// 振り返り情報を含むコールバック用のデータクラス
 class ReflectionData {
   final int concentration; // 集中度（0-100）
@@ -171,7 +173,7 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
                     child: ElevatedButton(
                       onPressed: _goToNextPage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange.shade800,
+                        backgroundColor: ParadiseColors.primaryTeal,
                         foregroundColor: Colors.white,
                       ),
                       child: Text(_currentPage == 0 ? "次へ" : "評価する"),
@@ -191,7 +193,7 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isActive ? Colors.orange.shade800 : Colors.grey.shade300,
+        color: isActive ? ParadiseColors.primaryTeal : ParadiseColors.skyBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -209,9 +211,9 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           '集中度を評価してください',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ParadiseColors.deepText),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
@@ -221,7 +223,8 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.orange.shade800,
+            color: ParadiseColors.accentGold,
+            fontFamily: 'Serif',
           ),
           textAlign: TextAlign.center,
         ),
@@ -232,7 +235,6 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
           min: 1,
           max: 10,
           divisions: 9,
-          activeColor: Colors.orange,
           label: '$_selectedLevel',
           onChanged: (value) => setState(() => _selectedLevel = value.toInt()),
         ),
@@ -242,15 +244,15 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.orange.shade200),
+              color: ParadiseColors.skyBackground,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: ParadiseColors.primaryTeal.withValues(alpha: 0.3)),
             ),
             child: Text(
               _getLevelDescription(_selectedLevel),
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.orange.shade800,
+                color: ParadiseColors.deepText,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -285,7 +287,6 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
             label: '良かった点（感想）',
             hint: '今回のセッションで良かった点を記入してください',
             icon: Icons.thumb_up,
-            color: Colors.green,
           ),
           const SizedBox(height: 16),
 
@@ -295,7 +296,6 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
             label: '改善点',
             hint: '次回改善したい点を記入してください',
             icon: Icons.trending_up,
-            color: Colors.orange,
           ),
           const SizedBox(height: 16),
 
@@ -305,7 +305,6 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
             label: '今後の方針',
             hint: '次回に向けた方針や目標を記入してください',
             icon: Icons.lightbulb,
-            color: Colors.blue,
           ),
         ],
       ),
@@ -317,21 +316,20 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
     required String label,
     required String hint,
     required IconData icon,
-    required MaterialColor color,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: color, size: 20),
+            Icon(icon, color: ParadiseColors.accentGold, size: 20),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: color.shade800,
+                color: ParadiseColors.deepText,
               ),
             ),
           ],
@@ -342,16 +340,17 @@ class _ConcentrationBottomSheetState extends State<ConcentrationBottomSheet> {
           maxLines: 4,
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(color: ParadiseColors.deepText.withValues(alpha: 0.4)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: color.shade300),
+              borderSide: BorderSide(color: ParadiseColors.accentGold.withValues(alpha: 0.3), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: color.shade600, width: 2),
+              borderSide: BorderSide(color: ParadiseColors.subaccentGold, width: 2),
             ),
             filled: true,
-            fillColor: color.shade50,
+            fillColor: ParadiseColors.skyBackground,
           ),
         ),
       ],

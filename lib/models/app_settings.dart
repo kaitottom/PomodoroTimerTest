@@ -4,7 +4,11 @@ import 'timer_info.dart';
 enum BreakBackgroundType {
   forest, // 森
   sea,    // 海
+  undersea, // 海中
   onsen,  // 温泉
+  sky,   //空
+  lavender, //ラベンダー
+  snow,  //雪空
 
   // 今後キャラクターを追加する場合:
   // character1,
